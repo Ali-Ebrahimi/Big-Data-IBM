@@ -1,0 +1,372 @@
+{
+    "cells": [
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": "# Functional Programming Big Data Using Spark"
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": "## Mean"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": "rdd = sc.parallelize([101]+list(range(100)))"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": "sum = rdd.sum()\nn = rdd.count()\nmean = sum/n\nmean"
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": "## Median"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": "SortedAndIndexed = rdd.sortBy(lambda x : x).zipWithIndex().map(lambda val: (val[1], val[0])).collect()\nn = len(SortedAndIndexed)\nif (n % 2 == 1):\n    index = (n-1)/2\n    print (SortedAndIndexed.lookup(index))\nelse:\n    index1 = (n/2)-1\n    index2 = n/2\n    value1 = SortedAndIndexed.lookup(index1)\n    value2 = SortedAndIndexed.lookup(index2)\n    print ((value1+value1)/2)"
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": "## Standartd Deviation"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 6,
+            "metadata": {},
+            "outputs": [],
+            "source": "rdd = sc.parallelize(list(range(100)))"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 12,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": "49.5"
+                    },
+                    "execution_count": 12,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": "sum = rdd.sum()\nn = rdd.count()\nmean = sum/n\nmean"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 13,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": "28.86607004772212"
+                    },
+                    "execution_count": 13,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": "from math import sqrt\nsd = sqrt(rdd.map(lambda x : pow(x-mean,2)).sum()/n)\nsd"
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": "## Skewness"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 16,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": "2.929469122902907e-16"
+                    },
+                    "execution_count": 16,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": "n = float(n)\nskewness = n/((n-1)*(n-2))*rdd.map(lambda x : pow(x-mean,3)/pow(sd,3)).sum()\nskewness"
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": "## Kurtosis"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 17,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": "-1.8179393696945452"
+                    },
+                    "execution_count": 17,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": "kurtosis = rdd.map(lambda x : pow(x-mean,4)/pow(sd,4)).sum()/(1-n)\nkurtosis"
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": "## Covariace & Correlation "
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 19,
+            "metadata": {},
+            "outputs": [],
+            "source": "rddX = sc.parallelize(list(range(100)))\nrddY = sc.parallelize(list(range(100)))"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 21,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": "49.5\n49.5\n"
+                }
+            ],
+            "source": "meanX = rddX.sum()/float(rddX.count())\nmeanY = rddY.sum()/float(rddY.count())\nprint(meanX)\nprint(meanY)"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 24,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": "833.25"
+                    },
+                    "execution_count": 24,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": "rddXY = rddX.zip(rddY)\ncovXY = rddXY.map(lambda x_y : (x_y[0] - meanX)*(x_y[1] - meanY)).sum()/rddXY.count()\ncovXY"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 25,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": "28.86607004772212\n28.86607004772212\n"
+                }
+            ],
+            "source": "from math import sqrt\nsdX = sqrt(rddX.map(lambda x : pow(x-meanX,2)).sum()/n)\nsdY = sqrt(rddY.map(lambda x : pow(x-meanY,2)).sum()/n)\nprint(sdX)\nprint(sdY)"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 26,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": "1.0"
+                    },
+                    "execution_count": 26,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": "corrXY = covXY/(sdX*sdY)\ncorrXY"
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": "## Covariance Matrix"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 34,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": "array([[ 1.        ,  1.        , -1.        , -0.09286529],\n       [ 1.        ,  1.        , -1.        , -0.09286529],\n       [-1.        , -1.        ,  1.        ,  0.09286529],\n       [-0.09286529, -0.09286529,  0.09286529,  1.        ]])"
+                    },
+                    "execution_count": 34,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": "import random\nfrom pyspark.mllib.stat import Statistics\n\ncolumn1 = sc.parallelize(range(100))\ncolumn2 = sc.parallelize(range(100,200))\ncolumn3 = sc.parallelize(range(99, -1, -1))\ncolumn4 = sc.parallelize(random.sample(range(100),100))\ncolumn1 = column1.repartition(1)\ncolumn2 = column2.repartition(1)\ncolumn3 = column3.repartition(1)\ncolumn4 = column4.repartition(1)\n\ndata = column1.zip(column2).zip(column3).zip(column4)\n# print(data.take(5))\ndata = data.map(lambda row : [row[0][0][0], row[0][0][1], row[0][1], row[1]])\n# print(data.take(5))\nStatistics.corr(data)\n"
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": "## Real Data"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 35,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": "--2020-05-03 16:13:27--  https://github.com/IBM/coursera/raw/master/hmp.parquet\nResolving github.com (github.com)... 140.82.112.3\nConnecting to github.com (github.com)|140.82.112.3|:443... connected.\nHTTP request sent, awaiting response... 301 Moved Permanently\nLocation: https://github.com/IBM/skillsnetwork/raw/master/hmp.parquet [following]\n--2020-05-03 16:13:27--  https://github.com/IBM/skillsnetwork/raw/master/hmp.parquet\nReusing existing connection to github.com:443.\nHTTP request sent, awaiting response... 302 Found\nLocation: https://raw.githubusercontent.com/IBM/skillsnetwork/master/hmp.parquet [following]\n--2020-05-03 16:13:27--  https://raw.githubusercontent.com/IBM/skillsnetwork/master/hmp.parquet\nResolving raw.githubusercontent.com (raw.githubusercontent.com)... 199.232.8.133\nConnecting to raw.githubusercontent.com (raw.githubusercontent.com)|199.232.8.133|:443... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 932997 (911K) [application/octet-stream]\nSaving to: 'hmp.parquet'\n\n100%[======================================>] 932,997     --.-K/s   in 0.03s   \n\n2020-05-03 16:13:27 (32.0 MB/s) - 'hmp.parquet' saved [932997/932997]\n\n"
+                }
+            ],
+            "source": "# delete files from previous runs\n!rm -f hmp.parquet*\n\n# download the file containing the data in PARQUET format\n!wget https://github.com/IBM/coursera/raw/master/hmp.parquet\n    \n# create a dataframe out of it\ndf = spark.read.parquet('hmp.parquet')\n\n# register a corresponding query table\ndf.createOrReplaceTempView('df')"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 36,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": "+---+---+---+--------------------+-----------+\n|  x|  y|  z|              source|      class|\n+---+---+---+--------------------+-----------+\n| 22| 49| 35|Accelerometer-201...|Brush_teeth|\n| 22| 49| 35|Accelerometer-201...|Brush_teeth|\n| 22| 52| 35|Accelerometer-201...|Brush_teeth|\n| 22| 52| 35|Accelerometer-201...|Brush_teeth|\n| 21| 52| 34|Accelerometer-201...|Brush_teeth|\n| 22| 51| 34|Accelerometer-201...|Brush_teeth|\n| 20| 50| 35|Accelerometer-201...|Brush_teeth|\n| 22| 52| 34|Accelerometer-201...|Brush_teeth|\n| 22| 50| 34|Accelerometer-201...|Brush_teeth|\n| 22| 51| 35|Accelerometer-201...|Brush_teeth|\n| 21| 51| 33|Accelerometer-201...|Brush_teeth|\n| 20| 50| 34|Accelerometer-201...|Brush_teeth|\n| 21| 49| 33|Accelerometer-201...|Brush_teeth|\n| 21| 49| 33|Accelerometer-201...|Brush_teeth|\n| 20| 51| 35|Accelerometer-201...|Brush_teeth|\n| 18| 49| 34|Accelerometer-201...|Brush_teeth|\n| 19| 48| 34|Accelerometer-201...|Brush_teeth|\n| 16| 53| 34|Accelerometer-201...|Brush_teeth|\n| 18| 52| 35|Accelerometer-201...|Brush_teeth|\n| 18| 51| 32|Accelerometer-201...|Brush_teeth|\n+---+---+---+--------------------+-----------+\nonly showing top 20 rows\n\nroot\n |-- x: integer (nullable = true)\n |-- y: integer (nullable = true)\n |-- z: integer (nullable = true)\n |-- source: string (nullable = true)\n |-- class: string (nullable = true)\n\n"
+                }
+            ],
+            "source": "df.show()\ndf.printSchema()"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 37,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": "+--------------+--------+\n|         class|count(1)|\n+--------------+--------+\n| Use_telephone|   15225|\n| Standup_chair|   25417|\n|      Eat_meat|   31236|\n|     Getup_bed|   45801|\n|   Drink_glass|   42792|\n|    Pour_water|   41673|\n|     Comb_hair|   23504|\n|          Walk|   92254|\n|  Climb_stairs|   40258|\n| Sitdown_chair|   25036|\n|   Liedown_bed|   11446|\n|Descend_stairs|   15375|\n|   Brush_teeth|   29829|\n|      Eat_soup|    6683|\n+--------------+--------+\n\n"
+                }
+            ],
+            "source": "spark.sql('select class,count(*) from df group by class').show()"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 38,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": "+--------------+-----+\n|         class|count|\n+--------------+-----+\n| Use_telephone|15225|\n| Standup_chair|25417|\n|      Eat_meat|31236|\n|     Getup_bed|45801|\n|   Drink_glass|42792|\n|    Pour_water|41673|\n|     Comb_hair|23504|\n|          Walk|92254|\n|  Climb_stairs|40258|\n| Sitdown_chair|25036|\n|   Liedown_bed|11446|\n|Descend_stairs|15375|\n|   Brush_teeth|29829|\n|      Eat_soup| 6683|\n+--------------+-----+\n\n"
+                }
+            ],
+            "source": "df.groupBy('class').count().show()"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 39,
+            "metadata": {
+                "pixiedust": {
+                    "displayParams": {
+                        "handlerId": "tableView"
+                    }
+                }
+            },
+            "outputs": [
+                {
+                    "data": {
+                        "text/html": "<style type=\"text/css\">.pd_warning{display:none;}</style><div class=\"pd_warning\"><em>Hey, there's something awesome here! To see it, open this notebook outside GitHub, in a viewer like Jupyter</em></div>\n        <div class=\"pd_save is-viewer-good\" style=\"padding-right:10px;text-align: center;line-height:initial !important;font-size: xx-large;font-weight: 500;color: coral;\">\n            \n        </div>\n    <div id=\"chartFigureaffd3289\" class=\"pd_save is-viewer-good\" style=\"overflow-x:auto\">\n            <style type=\"text/css\" class=\"pd_save\">\n    .df-table-wrapper .panel-heading {\n      border-radius: 0;\n      padding: 0px;\n    }\n    .df-table-wrapper .panel-heading:hover {\n      border-color: #008571;\n    }\n    .df-table-wrapper .panel-title a {\n      background-color: #f9f9fb;\n      color: #333333;\n      display: block;\n      outline: none;\n      padding: 10px 15px;\n      text-decoration: none;\n    }\n    .df-table-wrapper .panel-title a:hover {\n      background-color: #337ab7;\n      border-color: #2e6da4;\n      color: #ffffff;\n      display: block;\n      padding: 10px 15px;\n      text-decoration: none;\n    }\n    .df-table-wrapper {\n      font-size: small;\n      font-weight: 300;\n      letter-spacing: 0.5px;\n      line-height: normal;\n      height: inherit;\n      overflow: auto;\n    }\n    .df-table-search {\n      margin: 0 0 20px 0;\n    }\n    .df-table-search-count {\n      display: inline-block;\n      margin: 0 0 20px 0;\n    }\n    .df-table-container {\n      max-height: 50vh;\n      max-width: 100%;\n      overflow-x: auto;\n      position: relative;\n    }\n    .df-table-wrapper table {\n      border: 0 none #ffffff;\n      border-collapse: collapse;\n      margin: 0;\n      min-width: 100%;\n      padding: 0;\n      table-layout: fixed;\n      height: inherit;\n      overflow: auto;\n    }\n    .df-table-wrapper tr.hidden {\n      display: none;\n    }\n    .df-table-wrapper tr:nth-child(even) {\n      background-color: #f9f9fb;\n    }\n    .df-table-wrapper tr.even {\n      background-color: #f9f9fb;\n    }\n    .df-table-wrapper tr.odd {\n      background-color: #ffffff;\n    }\n    .df-table-wrapper td + td {\n      border-left: 1px solid #e0e0e0;\n    }\n  \n    .df-table-wrapper thead,\n    .fixed-header {\n      font-weight: 600;\n    }\n    .df-table-wrapper tr,\n    .fixed-row {\n      border: 0 none #ffffff;\n      margin: 0;\n      padding: 0;\n    }\n    .df-table-wrapper th,\n    .df-table-wrapper td,\n    .fixed-cell {\n      border: 0 none #ffffff;\n      margin: 0;\n      min-width: 50px;\n      padding: 5px 20px 5px 10px;\n      text-align: left;\n      word-wrap: break-word;\n    }\n    .df-table-wrapper th {\n      padding-bottom: 0;\n      padding-top: 0;\n    }\n    .df-table-wrapper th div {\n      max-height: 1px;\n      visibility: hidden;\n    }\n  \n    .df-schema-field {\n      margin-left: 10px;\n    }\n  \n    .fixed-header-container {\n      overflow: hidden;\n      position: relative;\n    }\n    .fixed-header {\n      border-bottom: 2px solid #000;\n      display: table;\n      position: relative;\n    }\n    .fixed-row {\n      display: table-row;\n    }\n    .fixed-cell {\n      display: table-cell;\n    }\n  </style>\n  \n  \n  <div class=\"df-table-wrapper df-table-wrapper-affd3289 panel-group pd_save\">\n    <!-- dataframe schema -->\n    \n    <div class=\"panel panel-default\">\n      <div class=\"panel-heading\">\n        <h4 class=\"panel-title\" style=\"margin: 0px;\">\n          <a data-toggle=\"collapse\" href=\"#df-schema-affd3289\" data-parent=\"#df-table-wrapper-affd3289\">Schema</a>\n        </h4>\n      </div>\n      <div id=\"df-schema-affd3289\" class=\"panel-collapse collapse\">\n        <div class=\"panel-body\" style=\"font-family: monospace;\">\n          <div class=\"df-schema-fields\">\n            <div>Field types:</div>\n            \n              <div class=\"df-schema-field\"><strong>class: </strong> object</div>\n            \n              <div class=\"df-schema-field\"><strong>count: </strong> int64</div>\n            \n          </div>\n        </div>\n      </div>\n    </div>\n    \n    <!-- dataframe table -->\n    <div class=\"panel panel-default\">\n      \n      <div class=\"panel-heading\">\n        <h4 class=\"panel-title\" style=\"margin: 0px;\">\n          <a data-toggle=\"collapse\" href=\"#df-table-affd3289\" data-parent=\"#df-table-wrapper-affd3289\"> Table</a>\n        </h4>\n      </div>\n      \n      <div id=\"df-table-affd3289\" class=\"panel-collapse collapse in\">\n        <div class=\"panel-body\">\n          \n          <input type=\"text\" class=\"df-table-search form-control input-sm\" placeholder=\"Search table\">\n          \n          <div>\n            \n            <span class=\"df-table-search-count\">Showing 14 of 14 rows</span>\n            \n          </div>\n          <!-- fixed header for when dataframe table scrolls -->\n          <div class=\"fixed-header-container\">\n            <div class=\"fixed-header\">\n              <div class=\"fixed-row\">\n                \n                <div class=\"fixed-cell\">class</div>\n                \n                <div class=\"fixed-cell\">count</div>\n                \n              </div>\n            </div>\n          </div>\n          <div class=\"df-table-container\">\n            <table class=\"df-table\">\n              <thead>\n                <tr>\n                  \n                  <th><div>class</div></th>\n                  \n                  <th><div>count</div></th>\n                  \n                </tr>\n              </thead>\n              <tbody>\n                \n                <tr>\n                  \n                  <td>Eat_soup</td>\n                  \n                  <td>6683</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Liedown_bed</td>\n                  \n                  <td>11446</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Use_telephone</td>\n                  \n                  <td>15225</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Descend_stairs</td>\n                  \n                  <td>15375</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Comb_hair</td>\n                  \n                  <td>23504</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Sitdown_chair</td>\n                  \n                  <td>25036</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Standup_chair</td>\n                  \n                  <td>25417</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Brush_teeth</td>\n                  \n                  <td>29829</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Eat_meat</td>\n                  \n                  <td>31236</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Climb_stairs</td>\n                  \n                  <td>40258</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Pour_water</td>\n                  \n                  <td>41673</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Drink_glass</td>\n                  \n                  <td>42792</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Getup_bed</td>\n                  \n                  <td>45801</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Walk</td>\n                  \n                  <td>92254</td>\n                  \n                </tr>\n                \n              </tbody>\n            </table>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n  \n  <script class=\"pd_save\">\n    $(function() {\n      var tableWrapper = $('.df-table-wrapper-affd3289');\n      var fixedHeader = $('.fixed-header', tableWrapper);\n      var tableContainer = $('.df-table-container', tableWrapper);\n      var table = $('.df-table', tableContainer);\n      var rows = $('tbody > tr', table);\n      var total = 14;\n  \n      fixedHeader\n        .css('width', table.width())\n        .find('.fixed-cell')\n        .each(function(i, e) {\n          $(this).css('width', $('.df-table-wrapper-affd3289 th:nth-child(' + (i+1) + ')').css('width'));\n        });\n  \n      tableContainer.scroll(function() {\n        fixedHeader.css({ left: table.position().left });\n      });\n  \n      rows.on(\"click\", function(e){\n          var txt = e.delegateTarget.innerText;\n          var splits = txt.split(\"\\t\");\n          var len = splits.length;\n          var hdrs = $(fixedHeader).find(\".fixed-cell\");\n          // Add all cells in the selected row as a map to be consumed by the target as needed\n          var payload = {type:\"select\", targetDivId: \"\" };\n          for (var i = 0; i < len; i++) {\n            payload[hdrs[i].innerHTML] = splits[i];\n          }\n  \n          //simple selection highlighting, client adds \"selected\" class\n          $(this).addClass(\"selected\").siblings().removeClass(\"selected\");\n          $(document).trigger('pd_event', payload);\n      });\n  \n      $('.df-table-search', tableWrapper).keyup(function() {\n        var val = '^(?=.*\\\\b' + $.trim($(this).val()).split(/\\s+/).join('\\\\b)(?=.*\\\\b') + ').*$';\n        var reg = RegExp(val, 'i');\n        var index = 0;\n        \n        rows.each(function(i, e) {\n          if (!reg.test($(this).text().replace(/\\s+/g, ' '))) {\n            $(this).attr('class', 'hidden');\n          }\n          else {\n            $(this).attr('class', (++index % 2 == 0 ? 'even' : 'odd'));\n          }\n        });\n        $('.df-table-search-count', tableWrapper).html('Showing ' + index + ' of ' + total + ' rows');\n      });\n    });\n  \n    $(\".df-table-wrapper td:contains('http://')\").each(function(){var tc = this.textContent; $(this).wrapInner(\"<a target='_blank' href='\" + tc + \"'></a>\");});\n    $(\".df-table-wrapper td:contains('https://')\").each(function(){var tc = this.textContent; $(this).wrapInner(\"<a target='_blank' href='\" + tc + \"'></a>\");});\n  </script>\n  \n        </div>",
+                        "text/plain": "<IPython.core.display.HTML object>"
+                    },
+                    "metadata": {},
+                    "output_type": "display_data"
+                }
+            ],
+            "source": "import pixiedust\nfrom pyspark.sql.functions import col\ncounts = df.groupBy('class').count().orderBy('count')\ndisplay(counts)"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 41,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": "+----+-----+------------------+------------------+-----------------+\n| min|  max|              mean|            stddev|      minmaxratio|\n+----+-----+------------------+------------------+-----------------+\n|6683|92254|31894.928571428572|21284.893716741157|13.80427951518779|\n+----+-----+------------------+------------------+-----------------+\n\n"
+                }
+            ],
+            "source": "spark.sql('''\n    select \n        *,\n        max/min as minmaxratio -- compute minmaxratio based on previously computed values\n        from (\n            select \n                min(ct) as min, -- compute minimum value of all classes\n                max(ct) as max, -- compute maximum value of all classes\n                mean(ct) as mean, -- compute mean between all classes\n                stddev(ct) as stddev -- compute standard deviation between all classes\n                from (\n                    select\n                        count(*) as ct -- count the number of rows per class and rename it to ct\n                        from df -- access the temporary query table called df backed by DataFrame df\n                        group by class -- aggrecate over class\n                )\n        )   \n''').show()"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 42,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": "+----+-----+------------------+------------------+-----------------+\n| min|  max|              mean|            stddev|      minmaxratio|\n+----+-----+------------------+------------------+-----------------+\n|6683|92254|31894.928571428572|21284.893716741157|13.80427951518779|\n+----+-----+------------------+------------------+-----------------+\n\n"
+                }
+            ],
+            "source": "from pyspark.sql.functions import col, min, max, mean, stddev\n\ndf \\\n    .groupBy('class') \\\n    .count() \\\n    .select([ \n        min(col(\"count\")).alias('min'), \n        max(col(\"count\")).alias('max'), \n        mean(col(\"count\")).alias('mean'), \n        stddev(col(\"count\")).alias('stddev') \n    ]) \\\n    .select([\n        col('*'),\n        (col(\"max\") / col(\"min\")).alias('minmaxratio')\n    ]) \\\n    .show()"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 54,
+            "metadata": {
+                "pixiedust": {
+                    "displayParams": {
+                        "handlerId": "tableView"
+                    }
+                }
+            },
+            "outputs": [
+                {
+                    "data": {
+                        "text/html": "<style type=\"text/css\">.pd_warning{display:none;}</style><div class=\"pd_warning\"><em>Hey, there's something awesome here! To see it, open this notebook outside GitHub, in a viewer like Jupyter</em></div>\n        <div class=\"pd_save is-viewer-good\" style=\"padding-right:10px;text-align: center;line-height:initial !important;font-size: xx-large;font-weight: 500;color: coral;\">\n            \n        </div>\n    <div id=\"chartFigure27839fef\" class=\"pd_save is-viewer-good\" style=\"overflow-x:auto\">\n            <style type=\"text/css\" class=\"pd_save\">\n    .df-table-wrapper .panel-heading {\n      border-radius: 0;\n      padding: 0px;\n    }\n    .df-table-wrapper .panel-heading:hover {\n      border-color: #008571;\n    }\n    .df-table-wrapper .panel-title a {\n      background-color: #f9f9fb;\n      color: #333333;\n      display: block;\n      outline: none;\n      padding: 10px 15px;\n      text-decoration: none;\n    }\n    .df-table-wrapper .panel-title a:hover {\n      background-color: #337ab7;\n      border-color: #2e6da4;\n      color: #ffffff;\n      display: block;\n      padding: 10px 15px;\n      text-decoration: none;\n    }\n    .df-table-wrapper {\n      font-size: small;\n      font-weight: 300;\n      letter-spacing: 0.5px;\n      line-height: normal;\n      height: inherit;\n      overflow: auto;\n    }\n    .df-table-search {\n      margin: 0 0 20px 0;\n    }\n    .df-table-search-count {\n      display: inline-block;\n      margin: 0 0 20px 0;\n    }\n    .df-table-container {\n      max-height: 50vh;\n      max-width: 100%;\n      overflow-x: auto;\n      position: relative;\n    }\n    .df-table-wrapper table {\n      border: 0 none #ffffff;\n      border-collapse: collapse;\n      margin: 0;\n      min-width: 100%;\n      padding: 0;\n      table-layout: fixed;\n      height: inherit;\n      overflow: auto;\n    }\n    .df-table-wrapper tr.hidden {\n      display: none;\n    }\n    .df-table-wrapper tr:nth-child(even) {\n      background-color: #f9f9fb;\n    }\n    .df-table-wrapper tr.even {\n      background-color: #f9f9fb;\n    }\n    .df-table-wrapper tr.odd {\n      background-color: #ffffff;\n    }\n    .df-table-wrapper td + td {\n      border-left: 1px solid #e0e0e0;\n    }\n  \n    .df-table-wrapper thead,\n    .fixed-header {\n      font-weight: 600;\n    }\n    .df-table-wrapper tr,\n    .fixed-row {\n      border: 0 none #ffffff;\n      margin: 0;\n      padding: 0;\n    }\n    .df-table-wrapper th,\n    .df-table-wrapper td,\n    .fixed-cell {\n      border: 0 none #ffffff;\n      margin: 0;\n      min-width: 50px;\n      padding: 5px 20px 5px 10px;\n      text-align: left;\n      word-wrap: break-word;\n    }\n    .df-table-wrapper th {\n      padding-bottom: 0;\n      padding-top: 0;\n    }\n    .df-table-wrapper th div {\n      max-height: 1px;\n      visibility: hidden;\n    }\n  \n    .df-schema-field {\n      margin-left: 10px;\n    }\n  \n    .fixed-header-container {\n      overflow: hidden;\n      position: relative;\n    }\n    .fixed-header {\n      border-bottom: 2px solid #000;\n      display: table;\n      position: relative;\n    }\n    .fixed-row {\n      display: table-row;\n    }\n    .fixed-cell {\n      display: table-cell;\n    }\n  </style>\n  \n  \n  <div class=\"df-table-wrapper df-table-wrapper-27839fef panel-group pd_save\">\n    <!-- dataframe schema -->\n    \n    <div class=\"panel panel-default\">\n      <div class=\"panel-heading\">\n        <h4 class=\"panel-title\" style=\"margin: 0px;\">\n          <a data-toggle=\"collapse\" href=\"#df-schema-27839fef\" data-parent=\"#df-table-wrapper-27839fef\">Schema</a>\n        </h4>\n      </div>\n      <div id=\"df-schema-27839fef\" class=\"panel-collapse collapse\">\n        <div class=\"panel-body\" style=\"font-family: monospace;\">\n          <div class=\"df-schema-fields\">\n            <div>Field types:</div>\n            \n              <div class=\"df-schema-field\"><strong>class: </strong> object</div>\n            \n              <div class=\"df-schema-field\"><strong>count: </strong> int64</div>\n            \n          </div>\n        </div>\n      </div>\n    </div>\n    \n    <!-- dataframe table -->\n    <div class=\"panel panel-default\">\n      \n      <div class=\"panel-heading\">\n        <h4 class=\"panel-title\" style=\"margin: 0px;\">\n          <a data-toggle=\"collapse\" href=\"#df-table-27839fef\" data-parent=\"#df-table-wrapper-27839fef\"> Table</a>\n        </h4>\n      </div>\n      \n      <div id=\"df-table-27839fef\" class=\"panel-collapse collapse in\">\n        <div class=\"panel-body\">\n          \n          <input type=\"text\" class=\"df-table-search form-control input-sm\" placeholder=\"Search table\">\n          \n          <div>\n            \n            <span class=\"df-table-search-count\">Showing 14 of 14 rows</span>\n            \n          </div>\n          <!-- fixed header for when dataframe table scrolls -->\n          <div class=\"fixed-header-container\">\n            <div class=\"fixed-header\">\n              <div class=\"fixed-row\">\n                \n                <div class=\"fixed-cell\">class</div>\n                \n                <div class=\"fixed-cell\">count</div>\n                \n              </div>\n            </div>\n          </div>\n          <div class=\"df-table-container\">\n            <table class=\"df-table\">\n              <thead>\n                <tr>\n                  \n                  <th><div>class</div></th>\n                  \n                  <th><div>count</div></th>\n                  \n                </tr>\n              </thead>\n              <tbody>\n                \n                <tr>\n                  \n                  <td>Eat_soup</td>\n                  \n                  <td>6683</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Liedown_bed</td>\n                  \n                  <td>11446</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Use_telephone</td>\n                  \n                  <td>15225</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Descend_stairs</td>\n                  \n                  <td>15375</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Comb_hair</td>\n                  \n                  <td>23504</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Sitdown_chair</td>\n                  \n                  <td>25036</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Standup_chair</td>\n                  \n                  <td>25417</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Brush_teeth</td>\n                  \n                  <td>29829</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Eat_meat</td>\n                  \n                  <td>31236</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Climb_stairs</td>\n                  \n                  <td>40258</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Pour_water</td>\n                  \n                  <td>41673</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Drink_glass</td>\n                  \n                  <td>42792</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Getup_bed</td>\n                  \n                  <td>45801</td>\n                  \n                </tr>\n                \n                <tr>\n                  \n                  <td>Walk</td>\n                  \n                  <td>92254</td>\n                  \n                </tr>\n                \n              </tbody>\n            </table>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n  \n  <script class=\"pd_save\">\n    $(function() {\n      var tableWrapper = $('.df-table-wrapper-27839fef');\n      var fixedHeader = $('.fixed-header', tableWrapper);\n      var tableContainer = $('.df-table-container', tableWrapper);\n      var table = $('.df-table', tableContainer);\n      var rows = $('tbody > tr', table);\n      var total = 14;\n  \n      fixedHeader\n        .css('width', table.width())\n        .find('.fixed-cell')\n        .each(function(i, e) {\n          $(this).css('width', $('.df-table-wrapper-27839fef th:nth-child(' + (i+1) + ')').css('width'));\n        });\n  \n      tableContainer.scroll(function() {\n        fixedHeader.css({ left: table.position().left });\n      });\n  \n      rows.on(\"click\", function(e){\n          var txt = e.delegateTarget.innerText;\n          var splits = txt.split(\"\\t\");\n          var len = splits.length;\n          var hdrs = $(fixedHeader).find(\".fixed-cell\");\n          // Add all cells in the selected row as a map to be consumed by the target as needed\n          var payload = {type:\"select\", targetDivId: \"\" };\n          for (var i = 0; i < len; i++) {\n            payload[hdrs[i].innerHTML] = splits[i];\n          }\n  \n          //simple selection highlighting, client adds \"selected\" class\n          $(this).addClass(\"selected\").siblings().removeClass(\"selected\");\n          $(document).trigger('pd_event', payload);\n      });\n  \n      $('.df-table-search', tableWrapper).keyup(function() {\n        var val = '^(?=.*\\\\b' + $.trim($(this).val()).split(/\\s+/).join('\\\\b)(?=.*\\\\b') + ').*$';\n        var reg = RegExp(val, 'i');\n        var index = 0;\n        \n        rows.each(function(i, e) {\n          if (!reg.test($(this).text().replace(/\\s+/g, ' '))) {\n            $(this).attr('class', 'hidden');\n          }\n          else {\n            $(this).attr('class', (++index % 2 == 0 ? 'even' : 'odd'));\n          }\n        });\n        $('.df-table-search-count', tableWrapper).html('Showing ' + index + ' of ' + total + ' rows');\n      });\n    });\n  \n    $(\".df-table-wrapper td:contains('http://')\").each(function(){var tc = this.textContent; $(this).wrapInner(\"<a target='_blank' href='\" + tc + \"'></a>\");});\n    $(\".df-table-wrapper td:contains('https://')\").each(function(){var tc = this.textContent; $(this).wrapInner(\"<a target='_blank' href='\" + tc + \"'></a>\");});\n  </script>\n  \n        </div>",
+                        "text/plain": "<IPython.core.display.HTML object>"
+                    },
+                    "metadata": {},
+                    "output_type": "display_data"
+                }
+            ],
+            "source": "counts = df.groupBy('class').count().orderBy('count', ascending=[1, 1])\ndisplay(counts)"
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": ""
+        }
+    ],
+    "metadata": {
+        "kernelspec": {
+            "display_name": "Python 3.6",
+            "language": "python",
+            "name": "python3"
+        },
+        "language_info": {
+            "codemirror_mode": {
+                "name": "ipython",
+                "version": 3
+            },
+            "file_extension": ".py",
+            "mimetype": "text/x-python",
+            "name": "python",
+            "nbconvert_exporter": "python",
+            "pygments_lexer": "ipython3",
+            "version": "3.6.9"
+        }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 1
+}
